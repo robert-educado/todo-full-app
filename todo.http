@@ -1,0 +1,21 @@
+
+### Hämta alla uppgifter (200 OK)
+GET http://localhost:8000/api/tasks
+Accept: application/json
+
+### Hämta uppgift (200 OK)
+GET http://localhost:8000/api/tasks/1
+Accept: application/json
+
+### Skapa uppgift (201 Created, 400 Bad Request <> 422 Unprocessable content)
+POST http://localhost:8000/api/tasks
+Accept: application/json
+Content-Type: application/json
+
+{
+    "name": "Städa"
+}
+
+### Radera uppgift (204 No Content, 404 Not Found)
+DELETE http://localhost:8000/api/tasks/2
+Accept: application/json
