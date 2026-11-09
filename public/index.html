@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODO-lista</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <main class="container">
+        <h1>Min TODO-lista</h1>
+        <p>Håll koll på dina uppgifter</p>
+
+        <form id="task-form">
+            <input
+                type="text"
+                id="task-input"
+                placeholder="Ange namn"
+                required
+                name="name"
+            >
+            <button type="submit">Lägg till</button>
+        </form>
+
+        <ul id="task-list">
+            <!-- <li>
+                <label>
+                    <input type="checkbox">
+                    <span>Städa</span>
+                </label>
+                <button class="delete-btn">Ta bort</button>
+            </li> -->
+        </ul>
+
+        <p id="task-count">
+            1 av 3 uppgifter klara
+        </p>
+    </main>
+    <script>
+
+        const taskList = document.getElementById('task-list');
+
+        fetch("/api/tasks")
+            // Deserialisera JSON-svaret från servern - alltså från JSON till JS
+            .then(response => response.json())
+            // Här har vi nu en JS-array med alla uppgifter som vi kan loopa igenom
+            .then(tasks => {
+                // Loopa igenom alla uppgifter och skapa ett <li> för varje uppgift
+                tasks.forEach(task => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <label>
+                            <input type="checkbox" ${task.completed ? 'checked' : ''}>
+                            <span>${task.name}</span>
+                        </label>
+                        <button class="delete-btn">Ta bort</button>
+                    `;
+                    taskList.appendChild(li);
+                });
+            })
+            .catch(error => console.error('Error fetching tasks:', error));
+
+            // =========================================================================
+            // Följande kod har med formuläret att göra. När användaren klickar på 
+            // "Lägg till" ska vi skicka en POST-förfrågan till servern med den nya 
+            // uppgiften.
+            // =========================================================================
+
+            const form = document.getElementById('task-form');
+
+            // Vi lyssnar efter submit-eventet på formuläret - detta event triggas när användaren 
+            // klickar på knappen "Lägg till".
+            form.addEventListener('submit', function(event) {
+
+               // Förhindra att formuläret skickas på vanligt sätt
+                event.preventDefault(); 
+
+                const formData = new FormData(form);
+
+                // Här hämtar vi värdet av inputfältet med name="name" från formuläret
+                const taskName = formData.get("name");
+
+                fetch("/api/tasks", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ name: taskName })
+                }).then(response => {
+                   
+                    // true om 2xx (200, 201, 204) betyder att allt gick bra
+                    // false om 4xx (400, 404) eller 5xx (500, 503) betyder att något gick fel
+                    if (response.ok) {
+                       
+                        const li = document.createElement('li');
+                        
+                        // Backend kommer skicka tillbaka den nya uppgiften som JSON. Exempel på JSON:
+                        // {
+                        //   "id": 16,
+                        //   "name": "Städa",
+                        //   "completed": 0
+                        // }
+
+                        // json() kommer returnera ett Promise som vi kan använda för att få ut själva JSON-objektet
+                        response.json().then(task => {
+
+                            // "task" är nu ett JS-objekt som vi kan använda för att skapa ett <li> med den nya uppgiften
+                            // det är detta vi fick tillbaka från backend efter det att vi skapade en task där med vår 
+                            // POST-förfrågan.
+                                
+                            // {
+                            //   "id": 16,
+                            //   "name": "Städa",
+                            //   "completed": 0
+                            // }
+
+                            li.innerHTML = `
+                                <label>
+                                    <input type="checkbox" ${task.completed ? 'checked' : ''}>
+                                    <span>${task.name}</span>
+                                </label>
+                                <button class="delete-btn">Ta bort</button>
+                            `;
+                            taskList.appendChild(li);
+                        });
+                       
+                        alert("Uppgiften skapades!");
+
+                    } else {
+                       throw new Error("Något gick fel vid skapandet av uppgiften.");
+                    }
+                }).catch(error => {
+                    alert("Något gick fel vid skapandet av uppgiften.");
+                });
+                
+            });
+
+    </script>
+</body>
+</html>
